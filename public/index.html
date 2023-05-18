@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./index.css">
+    <title>Minimlist chat App</title>
+</head>
+
+<body>
+    <div class="container">
+        <p class="msg">Messages:</p>
+        <div id="messages" class="messages">
+        </div>
+        <form id="msgForm" class="msgForm">
+            <input type="text" placeholder="Send message" class="input" id="inputBox" />
+            <input type="submit" class="btn" value="Send">
+        </form>
+    </div>
+    <script type="text/javascript">
+        const ws = new WebSocket(`ws://localhost:3030`); // 
+        // ws.binaryType = "blob"; // 0101010101010 => 01 01 0 1
+        // Log socket opening and closing
+        ws.addEventListener("open", event => {
+            console.log("Websocket connection opened");
+        });
+        ws.addEventListener("close", event => {
+            console.log("Websocket connection closed");
+        });
+        ws.onmessage = function (message) { // buyodan ushavoladi || bu index.js dan ham send qisa message
+            const msgDiv = document.createElement('div');  // <div></div>
+            msgDiv.classList.add('msgCtn'); // <div class="msgCtn"> </div>
+            if (message.data instanceof Blob) { 
+                // message.data === biz yozgan narsa 
+                reader = new FileReader(); // readerni instance qivoldik FileReaderdan 
+                reader.onload = () => { // reader onload == reader o'qishni boshlaganda onload
+                    msgDiv.innerHTML = reader.result; // <div class="msgCtn"> Hello </div> 
+                    document.getElementById('messages').appendChild(msgDiv); // <div id='messages'> <div class="msgCtn"> </div> </div>
+                };
+                reader.readAsText(message.data); // Biz yozgan norsani chaqirib beradi va keyin onload() ishga tushadi
+            } else {
+                console.log("Result2: " + message.data); // stringda keb qoganida ifga tushmasdan else ga keladi
+                msgDiv.innerHTML = message.data; // <div class="msgCtn"> Hello </div>
+                document.getElementById('messages').appendChild(msgDiv); //  <div id='messages'> <div class="msgCtn"> </div> </div>
+            }
+        }
+        const form = document.getElementById('msgForm');
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const message = document.getElementById('inputBox').value;
+            ws.send(message); // ws.onmessage functionni chaqirvoradi
+            document.getElementById('inputBox').value = ''
+        })
+    </script>
+</body>
+
+</html>
